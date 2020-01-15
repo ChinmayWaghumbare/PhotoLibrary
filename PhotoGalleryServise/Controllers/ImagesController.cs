@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -55,18 +56,41 @@ namespace PhotoGalleryServise.Controllers
                 return "Upload Failed";
             }
         }
-    
+
+        public bool ThumbnailCallback()
+        {
+            return false;
+        }
+
         [HttpGet]
-        public void GetImages()
+        public IEnumerable<byte[]> GetImages()
         {
             //Get Image folder path
             string sPath = "";
+            List<byte[]> imgData = new List<byte[]>();
             sPath = System.Web.Hosting.HostingEnvironment.MapPath("~/App_Data/Images/");
 
-            
+            //string[] filePaths = Directory.GetFiles(sPath, "*.*");
+
+            foreach (string file in Directory.EnumerateFiles(sPath, "*.*"))
+            {
+                Bitmap myBitmap = new Bitmap(file);
+
+                Image.GetThumbnailImageAbort myCallback =
+                                    new Image.GetThumbnailImageAbort(ThumbnailCallback);
+
+                Image myThumbnail = myBitmap.GetThumbnailImage(
+                40, 40, myCallback, IntPtr.Zero);
+
+                byte[] contents = (byte[])(new ImageConverter()).ConvertTo(myThumbnail, typeof(byte[]));
+
+                //  File.ReadAllText(file);
+                imgData.Add(contents);
+            }
+
             //Get all Images in that folder
 
-            //Return images
+            return imgData;
         }
     #region Required Methods
 
